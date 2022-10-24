@@ -10,9 +10,11 @@ dependencies {
     api(project(":functional"))
     api(project(":hashing"))
 
+    api(libs.jsr305)
+    api(libs.guava)
+
     implementation(project(":base-annotations"))
 
-    implementation(libs.guava)
     implementation(libs.slf4jApi)
 
     testImplementation(project(":process-services"))
