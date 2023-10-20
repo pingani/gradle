@@ -72,6 +72,16 @@ testing {
     }
 }
 
+notForAccessorGeneration {
+    configurations {
+        named("archTestRuntimeClasspath") {
+            // Unfortunately this dependency messes up Spock for test detection of architecture tests
+            // Causing the following error: Circular loading of installed providers detected
+            exclude("org.eclipse.jgit", "org.eclipse.jgit.ssh.apache")
+        }
+    }
+}
+
 tasks.codeQuality.configure {
     dependsOn(testing.suites.named("archTest"))
 }

@@ -20,7 +20,7 @@ dependencies {
     implementation(libs.guava)
     implementation(libs.inject)
     implementation(libs.jgit)
-    implementation(libs.jsch)
+    implementation(libs.jgitSsh)
 
     testImplementation(project(":native"))
     testImplementation(project(":snapshots"))
@@ -31,9 +31,9 @@ dependencies {
     testFixturesImplementation(project(":internal-integ-testing"))
 
     testFixturesImplementation(libs.jgit)
+    testFixturesImplementation(libs.jgitSsh)
     testFixturesImplementation(libs.commonsIo)
     testFixturesImplementation(libs.commonsHttpclient)
-    testFixturesImplementation(libs.jsch)
     testFixturesImplementation(libs.guava)
 
     integTestImplementation(project(":enterprise-operations"))

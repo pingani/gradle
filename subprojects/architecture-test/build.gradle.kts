@@ -14,7 +14,9 @@ description = """Verifies that Gradle code complies with architectural rules.
 """.trimMargin()
 
 dependencies {
-    currentClasspath(project(":distributions-full"))
+    currentClasspath(project(":distributions-full")) {
+        exclude("org.eclipse.jgit", "org.eclipse.jgit.ssh.apache")
+    }
     testImplementation(project(":base-services"))
     testImplementation(project(":model-core"))
     testImplementation(project(":file-temp"))
@@ -27,7 +29,9 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(libs.assertj)
 
-    testRuntimeOnly(project(":distributions-full"))
+    testRuntimeOnly(project(":distributions-full")) {
+        exclude("org.eclipse.jgit", "org.eclipse.jgit.ssh.apache")
+    }
 }
 
 val acceptedApiChangesFile = layout.projectDirectory.file("src/changes/accepted-public-api-changes.json")
