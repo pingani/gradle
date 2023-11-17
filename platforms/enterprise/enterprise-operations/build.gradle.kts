@@ -7,7 +7,8 @@ description = "Build operations consumed by the Develocity plugin"
 
 dependencies {
     api(project(":build-operations"))
-    api(project(":base-annotations"))
 
     api(libs.jsr305)
+
+    implementation(project(":base-annotations"))
 }

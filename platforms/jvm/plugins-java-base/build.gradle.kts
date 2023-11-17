@@ -25,6 +25,7 @@ dependencies {
     api(project(":base-services"))
     api(project(":core"))
     api(project(":core-api"))
+    api(project(":dependency-management"))
     api(project(":language-java"))
     api(project(":language-jvm"))
     api(project(":model-core"))
@@ -35,7 +36,6 @@ dependencies {
     api(libs.inject)
     api(libs.jsr305)
 
-    implementation(project(":dependency-management"))
     implementation(project(":file-collections"))
     implementation(project(":logging"))
     implementation(project(":platform-base"))

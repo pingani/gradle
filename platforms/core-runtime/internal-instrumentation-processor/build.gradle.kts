@@ -19,6 +19,8 @@ plugins {
 }
 
 dependencies {
+    api(project(":internal-instrumentation-api"))
+
     api(libs.asm)
     api(libs.javaPoet)
     api(libs.jsr305)
@@ -27,7 +29,6 @@ dependencies {
     implementation(libs.jacksonAnnotations)
     implementation(libs.jacksonDatabind)
 
-    implementation(project(":internal-instrumentation-api"))
     implementation(project(":base-services"))
     implementation(project(":model-core"))
     implementation(project(":core-api"))

@@ -6,6 +6,7 @@ plugins {
 description = "Tools to take immutable, comparable snapshots of files and other things"
 
 dependencies {
+    api(project(":base-annotations"))
     api(project(":files"))
     api(project(":functional"))
     api(project(":hashing"))
@@ -13,7 +14,6 @@ dependencies {
     api(libs.jsr305)
     api(libs.guava)
 
-    implementation(project(":base-annotations"))
 
     implementation(libs.slf4jApi)
 

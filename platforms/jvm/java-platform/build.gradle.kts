@@ -35,7 +35,6 @@ dependencies {
     implementation(project(":publish"))
 
     runtimeOnly(libs.groovy)
-    implementation(libs.guava)
 
     integTestImplementation(testFixtures(project(":dependency-management")))
     integTestImplementation(testFixtures(project(":resources-http")))

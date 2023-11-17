@@ -23,6 +23,8 @@ dependencies {
     implementation(libs.slf4jApi)
     implementation(libs.commonsIo)
 
+    compileOnly(libs.jetbrainsAnnotations)
+
     testImplementation(project(":process-services"))
     testImplementation(project(":resources"))
     testImplementation(project(":snapshots"))
