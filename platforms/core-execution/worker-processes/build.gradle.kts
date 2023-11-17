@@ -9,6 +9,7 @@ gradlebuildJava.usedInWorkers()
 dependencies {
     api(project(":base-annotations"))
     api(project(":base-services"))
+    api(project(":build-operations"))
     api(project(":logging"))
     api(project(":logging-api"))
     api(project(":messaging"))
