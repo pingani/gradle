@@ -471,7 +471,7 @@ object GuardedDataCodec : Codec<GuardedData<*>> {
             NO_OWNER -> null
             else -> isolate.identities.getInstance(ownerId) as ProviderInternal<*>
         }
-        val value = read() as ProviderInternal<*>
+        val value = readNonNull<Any>()
         return GuardedData.of(owner, value)
     }
 }
