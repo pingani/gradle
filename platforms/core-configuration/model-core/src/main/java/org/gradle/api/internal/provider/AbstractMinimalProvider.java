@@ -338,8 +338,11 @@ public abstract class AbstractMinimalProvider<T> implements ProviderInternal<T>,
             return value.toString();
         }
 
+        @SuppressWarnings("try") // We use try-with-resources for side effects
         public ProviderInternal<? extends V> withFinalValue(ValueConsumer consumer) {
-            return value.withFinalValue(consumer);
+            try (EvaluationContext.ScopeContext ignore = openScope()) {
+                return value.withFinalValue(consumer);
+            }
         }
 
         @Nullable
