@@ -458,7 +458,7 @@ object GuardedDataCodec : Codec<GuardedData<*>> {
     override suspend fun WriteContext.encode(value: GuardedData<*>) {
         // GuardedData.owner is a back-reference to the provider being serialized up the stack.
         // This provider should not be "expanded", but rather stored with preserved identity.
-        val ownerId = when(val owner = value.owner) {
+        val ownerId = when (val owner = value.owner) {
             null -> NO_OWNER
             else -> isolate.identities.getId(owner) ?: throw IllegalStateException("Cannot write provider guard before writing its owner")
         }

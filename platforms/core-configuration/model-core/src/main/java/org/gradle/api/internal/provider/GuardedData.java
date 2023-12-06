@@ -70,7 +70,7 @@ public interface GuardedData<T> {
     static <T> GuardedData<T> of(@Nullable ProviderInternal<?> owner, T data) {
         if (owner == null) {
             return Cast.uncheckedCast(new AbstractMinimalProvider.DataGuard<>(Cast.uncheckedCast(data)));
-        } if (data instanceof ProviderInternal<?>) {
+        } else if (data instanceof ProviderInternal<?>) {
             return Cast.uncheckedCast(new AbstractMinimalProvider.ProviderGuard<>(owner, Cast.uncheckedCast(data)));
         } else if (data instanceof CollectionSupplier<?, ?>) {
             return Cast.uncheckedCast(new AbstractCollectionProperty.CollectionSupplierGuard<>(owner, Cast.uncheckedCast(data)));
