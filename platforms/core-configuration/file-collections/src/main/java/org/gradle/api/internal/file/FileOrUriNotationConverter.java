@@ -19,6 +19,7 @@ package org.gradle.api.internal.file;
 import org.gradle.api.UncheckedIOException;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.resources.TextResource;
+import org.gradle.internal.deprecation.DeprecationLogger;
 import org.gradle.internal.exceptions.DiagnosticsVisitor;
 import org.gradle.internal.os.OperatingSystem;
 import org.gradle.internal.typeconversion.NotationConvertResult;
@@ -28,12 +29,9 @@ import org.gradle.internal.typeconversion.NotationParserBuilder;
 import org.gradle.internal.typeconversion.TypeConversionException;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -87,9 +85,7 @@ public class FileOrUriNotationConverter implements NotationConverter<Object, Obj
         }
         if (notation instanceof URI) {
             URI uri = (URI) notation;
-            if ("file".equals(uri.getScheme()) && uri.getPath() != null) {
-                result.converted(new File(uri.getPath()));
-            } else {
+            if (!("file".equals(uri.getScheme()) && tryConvertToFile(uri, result))) {
                 result.converted(uri);
             }
             return;
@@ -97,7 +93,16 @@ public class FileOrUriNotationConverter implements NotationConverter<Object, Obj
         if (notation instanceof CharSequence) {
             String notationString = notation.toString();
             if (notationString.startsWith("file:")) {
-                result.converted(new File(uriDecode(notationString.substring(5))));
+                try {
+                    URI uri = new URI(notationString);
+                    if (tryConvertToFile(uri, result)) {
+                        return;
+                    }
+                } catch (URISyntaxException ignored) {
+                    // Unparsable, use old logic
+                }
+                // Fallback if relative or unparsable
+                result.converted(new File(fallbackUrlDecode(notationString.substring(5))));
                 return;
             }
             if (notationString.startsWith("http:") || notationString.startsWith("https:")) {
@@ -122,6 +127,17 @@ public class FileOrUriNotationConverter implements NotationConverter<Object, Obj
         }
     }
 
+    private static boolean tryConvertToFile(URI uri, NotationConvertResult<? super Object> result) {
+        File file;
+        try {
+            file = new File(uri);
+        } catch (IllegalArgumentException ignored) {
+            return false;
+        }
+        result.converted(file);
+        return true;
+    }
+
     private static boolean isWindowsRootDirectory(String scheme) {
         return scheme.length() == 2 && Character.isLetter(scheme.charAt(0)) && scheme.charAt(1) == ':' && OperatingSystem.current().isWindows();
     }
@@ -134,22 +150,15 @@ public class FileOrUriNotationConverter implements NotationConverter<Object, Obj
         }
     }
 
-    private static String uriDecode(String path) {
-        try {
-            return URLDecoder.decode(path, StandardCharsets.UTF_8.name());
-        } catch (IllegalArgumentException e) {
-            return fallbackUrlDecode(path);
-        } catch (UnsupportedEncodingException e) {
-            throw new AssertionError(e);
-        }
-    }
-
     /**
      * Lenient legacy behavior to fall back to when URI cannot be normally parsed.
-     *
-     * TODO: Deprecate this
      */
     private static String fallbackUrlDecode(String path) {
+        DeprecationLogger.deprecateBehaviour("legacy URL decoding for invalid URLs")
+            .withAdvice("Use a valid URL or a file path instead.")
+            .willBecomeAnErrorInGradle9()
+            .withUpgradeGuideSection(8, "deprecated_legacy_url_decoding")
+            .nagUser();
         StringBuffer builder = new StringBuffer();
         Matcher matcher = ENCODED_URI.matcher(path);
         while (matcher.find()) {
