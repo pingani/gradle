@@ -18,6 +18,7 @@ package org.gradle.api.provider
 
 import org.gradle.integtests.fixtures.AbstractIntegrationSpec
 import org.gradle.integtests.fixtures.ToBeFixedForConfigurationCache
+import org.gradle.integtests.fixtures.executer.GradleContextualExecuter
 import org.gradle.test.precondition.Requires
 import org.gradle.test.preconditions.IntegTestPreconditions
 import spock.lang.Issue
@@ -191,10 +192,16 @@ task thing(type: SomeTask) {
 
         then:
         failure.assertHasDescription("Execution failed for task ':thing'.")
-        failure.assertHasCause("""Cannot query the value of task ':thing' property 'prop' because it has no value available.
+        def baseMessage = "Cannot query the value of task ':thing' property 'prop' because it has no value available."
+        if (GradleContextualExecuter.isConfigCache()) {
+            // extensions not supported at execution time
+            failure.assertHasCause(baseMessage)
+        } else {
+            failure.assertHasCause("""$baseMessage
 The value of this property is derived from:
   - extension 'custom2' property 'source'
   - extension 'custom1' property 'source'""")
+        }
     }
 
     def "can use property with no value as optional ad hoc task input property"() {
@@ -373,6 +380,10 @@ assert custom.prop.get() == "value 4"
         succeeds()
     }
 
+    @Requires(
+        value = IntegTestPreconditions.NotConfigCached,
+        reason = "Config cache does not support extensions during execution, leading to 'Could not get unknown property 'custom' for task ':wrongValueTypeDsl' of type org.gradle.api.DefaultTask."
+    )
     def "reports failure to set property value using incompatible type"() {
         given:
         buildFile << """
@@ -708,6 +719,7 @@ project.extensions.create("some", SomeExtension)
                 output = layout.projectDirectory.file("foo.txt")
             }
             tasks.register("consumer", Consumer) {
+                def layout = layout
                 def filtered = files(producer.map { it.output }).elements.map {
                     it.collect { it.asFile }
                         .findAll { it.isFile() }
