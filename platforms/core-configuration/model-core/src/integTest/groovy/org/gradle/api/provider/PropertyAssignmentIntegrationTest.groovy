@@ -18,6 +18,7 @@ package org.gradle.api.provider
 
 import org.gradle.integtests.fixtures.AbstractIntegrationSpec
 import org.gradle.integtests.fixtures.executer.ExecutionFailure
+import org.gradle.integtests.fixtures.executer.GradleContextualExecuter
 
 import static org.hamcrest.CoreMatchers.containsString
 
@@ -111,29 +112,32 @@ class PropertyAssignmentIntegrationTest extends AbstractIntegrationSpec {
         groovyBuildFile(inputDeclaration, inputValue, operation)
 
         expect:
+        if (GradleContextualExecuter.configCache && expectedResultUnderCC != _) {
+            expectedResult = expectedResultUnderCC
+        }
         runAndAssert("myTask", expectedResult)
 
         where:
-        description                              | operation | inputType               | inputValue                                               | expectedResult
-        "Collection<T> = T[]"                    | "="       | "List<MyObject>"        | '[new MyObject("a")] as MyObject[]'                      | '[a]'
-        "Collection<T> = Iterable<T>"            | "="       | "List<MyObject>"        | '[new MyObject("a")] as Iterable<MyObject>'              | '[a]'
-        "Collection<T> = Provider<Iterable<T>>"  | "="       | "List<MyObject>"        | 'provider { [new MyObject("a")] as Iterable<MyObject> }' | unsupportedWithCause("Cannot cast object")
-        "Collection<T> += T"                     | "+="      | "List<MyObject>"        | 'new MyObject("a")'                                      | '[a]'
-        "Collection<T> << T"                     | "<<"      | "List<MyObject>"        | 'new MyObject("a")'                                      | '[a]'
-        "Collection<T> += Provider<T>"           | "+="      | "List<MyObject>"        | 'provider { new MyObject("a") }'                         | '[provider(?)]'
-        "Collection<T> << Provider<T>"           | "<<"      | "List<MyObject>"        | 'provider { new MyObject("a") }'                         | '[provider(?)]'
-        "Collection<T> += T[]"                   | "+="      | "List<MyObject>"        | '[new MyObject("a")] as MyObject[]'                      | '[[a]]'
-        "Collection<T> << T[]"                   | "<<"      | "List<MyObject>"        | '[new MyObject("a")] as MyObject[]'                      | unsupportedWithCause("Cannot cast object")
-        "Collection<T> += Iterable<T>"           | "+="      | "List<MyObject>"        | '[new MyObject("a")] as Iterable<MyObject>'              | '[a]'
-        "Collection<T> << Iterable<T>"           | "<<"      | "List<MyObject>"        | '[new MyObject("a")] as Iterable<MyObject>'              | '[[a]]'
-        "Collection<T> += Provider<Iterable<T>>" | "+="      | "List<MyObject>"        | 'provider { [new MyObject("a")] as Iterable<MyObject> }' | '[provider(?)]'
-        "Collection<T> << Provider<Iterable<T>>" | "<<"      | "List<MyObject>"        | 'provider { [new MyObject("a")] as Iterable<MyObject> }' | '[provider(?)]'
-        "Map<K, V> = Map<K, V>"                  | "="       | "Map<String, MyObject>" | '["a": new MyObject("b")]'                               | '[a:b]'
-        "Map<K, V> = Provider<Map<K, V>>"        | "="       | "Map<String, MyObject>" | 'provider { ["a": new MyObject("b")] }'                  | unsupportedWithCause("Cannot cast object")
-        "Map<K, V> += Map<K, V>"                 | "+="      | "Map<String, MyObject>" | '["a": new MyObject("b")]'                               | '[a:b]'
-        "Map<K, V> << Map<K, V>"                 | "<<"      | "Map<String, MyObject>" | '["a": new MyObject("b")]'                               | '[a:b]'
-        "Map<K, V> += Provider<Map<K, V>>"       | "+="      | "Map<String, MyObject>" | 'provider { ["a": new MyObject("b")] }'                  | unsupportedWithCause("No signature of method")
-        "Map<K, V> << Provider<Map<K, V>>"       | "<<"      | "Map<String, MyObject>" | 'provider { ["a": new MyObject("b")] }'                  | unsupportedWithCause("No signature of method")
+        description                              | operation | inputType               | inputValue                                               | expectedResult                                  | expectedResultUnderCC
+        "Collection<T> = T[]"                    | "="       | "List<MyObject>"        | '[new MyObject("a")] as MyObject[]'                      | '[a]'                                           | _
+        "Collection<T> = Iterable<T>"            | "="       | "List<MyObject>"        | '[new MyObject("a")] as Iterable<MyObject>'              | '[a]'                                           | _
+        "Collection<T> = Provider<Iterable<T>>"  | "="       | "List<MyObject>"        | 'provider { [new MyObject("a")] as Iterable<MyObject> }' | unsupportedWithCause("Cannot cast object")      | _
+        "Collection<T> += T"                     | "+="      | "List<MyObject>"        | 'new MyObject("a")'                                      | '[a]'                                           | _
+        "Collection<T> << T"                     | "<<"      | "List<MyObject>"        | 'new MyObject("a")'                                      | '[a]'                                           | _
+        "Collection<T> += Provider<T>"           | "+="      | "List<MyObject>"        | 'provider { new MyObject("a") }'                         | '[provider(?)]'                                 | '[fixed(class MyObject, a)]'
+        "Collection<T> << Provider<T>"           | "<<"      | "List<MyObject>"        | 'provider { new MyObject("a") }'                         | '[provider(?)]'                                 | '[fixed(class MyObject, a)]'
+        "Collection<T> += T[]"                   | "+="      | "List<MyObject>"        | '[new MyObject("a")] as MyObject[]'                      | '[[a]]'                                         | _
+        "Collection<T> << T[]"                   | "<<"      | "List<MyObject>"        | '[new MyObject("a")] as MyObject[]'                      | unsupportedWithCause("Cannot cast object")      | _
+        "Collection<T> += Iterable<T>"           | "+="      | "List<MyObject>"        | '[new MyObject("a")] as Iterable<MyObject>'              | '[a]'                                           | _
+        "Collection<T> << Iterable<T>"           | "<<"      | "List<MyObject>"        | '[new MyObject("a")] as Iterable<MyObject>'              | '[[a]]'                                         | _
+        "Collection<T> += Provider<Iterable<T>>" | "+="      | "List<MyObject>"        | 'provider { [new MyObject("a")] as Iterable<MyObject> }' | '[provider(?)]'                                 | '[fixed(class java.util.ArrayList, [a])]'
+        "Collection<T> << Provider<Iterable<T>>" | "<<"      | "List<MyObject>"        | 'provider { [new MyObject("a")] as Iterable<MyObject> }' | '[provider(?)]'                                 | '[fixed(class java.util.ArrayList, [a])]'
+        "Map<K, V> = Map<K, V>"                  | "="       | "Map<String, MyObject>" | '["a": new MyObject("b")]'                               | '[a:b]'                                         | _
+        "Map<K, V> = Provider<Map<K, V>>"        | "="       | "Map<String, MyObject>" | 'provider { ["a": new MyObject("b")] }'                  | unsupportedWithCause("Cannot cast object")      | _
+        "Map<K, V> += Map<K, V>"                 | "+="      | "Map<String, MyObject>" | '["a": new MyObject("b")]'                               | '[a:b]'                                         | _
+        "Map<K, V> << Map<K, V>"                 | "<<"      | "Map<String, MyObject>" | '["a": new MyObject("b")]'                               | '[a:b]'                                         | _
+        "Map<K, V> += Provider<Map<K, V>>"       | "+="      | "Map<String, MyObject>" | 'provider { ["a": new MyObject("b")] }'                  | unsupportedWithCause("No signature of method")  | _
+        "Map<K, V> << Provider<Map<K, V>>"       | "<<"      | "Map<String, MyObject>" | 'provider { ["a": new MyObject("b")] }'                  | unsupportedWithCause("No signature of method")  | _
     }
 
     def "test Groovy lazy collection types assignment for #description"() {
